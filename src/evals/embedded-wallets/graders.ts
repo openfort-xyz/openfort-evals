@@ -1,20 +1,15 @@
 import { contains, containsAny, defineGraders, judge } from '@/src/graders'
 
 export const graders = defineGraders({
-  configures_wallet_config: contains('walletConfig'),
-  has_shield_key: containsAny(['shieldPublishableKey', 'SHIELD_PUBLISHABLE_KEY']),
-  mentions_wallet_creation: containsAny(['wallet creation', 'create wallet', 'createWallet']),
+  has_openfort_react_import: contains('@openfort/react'),
+  mentions_wallet_creation: containsAny(['createWallet']),
   uses_wallet_hooks: containsAny([
-    'useEmbeddedWallet',
-    'useWalletClient',
     'useWallet',
-    'wallet hook',
+    'useWallets',
   ]),
   displays_wallet_address: containsAny([
-    'wallet address',
-    'address',
-    'account.address',
-    'walletAddress',
+    '.address',
+    '.ownerAddress'
   ]),
   handles_wallet_status: judge(
     'Does the code demonstrate how to check or handle wallet status (connected, disconnected, etc.)?',
