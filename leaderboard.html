@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LLM Leaderboard - Openfort Evals</title>
     <style>
+        @font-face {
+            font-family: 'tiempos';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('https://www.openfort.io/fonts/tiempos-headline-light.woff2') format('woff2');
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg: #f1efeb;
+            --panel: #ffffff;
+            --panel-alt: #fafafa;
+            --panel-hover: #f5f5f5;
+            --border: rgba(0, 0, 0, 0.06);
+            --border-strong: rgba(0, 0, 0, 0.1);
+            --text: #18181b;
+            --text-secondary: #3f3f46;
+            --muted: #71717a;
+            --brand-red: #FF3B30;
+            --brand-orange: #ffa16e;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,246 +38,277 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0A0A0B;
-            color: #e4e4e7;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            padding: 2rem 1rem;
-            line-height: 1.5;
+            padding: 3rem 1.5rem 4rem;
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         header {
             text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem 0;
+            margin-bottom: 2.5rem;
         }
 
         h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: 700;
+            font-family: 'tiempos', Georgia, serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 400;
+            color: var(--brand-red);
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
             letter-spacing: -0.02em;
         }
 
         .subtitle {
-            font-size: 1.125rem;
-            color: #A1A1AA;
-            max-width: 700px;
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 720px;
             margin: 0 auto;
-            line-height: 1.7;
+            line-height: 1.8;
         }
 
-        .table-container {
-            background: #18181B;
-            border-radius: 16px;
-            border: 1px solid #27272A;
+        .table-card {
+            position: relative;
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.5);
         }
+
 
         .table-wrapper {
             overflow-x: auto;
+            margin-top: 0;
+            position: relative;
+            z-index: 10;
         }
 
-        table {
+        .leaderboard-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0;
+            border-spacing: 0 0.45rem;
+            min-width: 720px;
         }
 
-        thead {
-            background: #27272A;
-        }
-
-        th {
-            padding: 1.25rem 1.5rem;
-            text-align: left;
+        thead th {
+            text-align: center;
+            font-size: 0.75rem;
             font-weight: 600;
-            font-size: 0.8125rem;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #71717A;
-            white-space: nowrap;
+            color: var(--muted);
+            padding: 0 0.5rem 1rem 0.5rem;
+        }
+
+        thead th.column-model {
+            text-align: left;
+            padding-left: 1.5rem;
         }
 
         tbody tr {
-            border-bottom: 1px solid #27272A;
-        }
-
-        tbody tr:last-child {
-            border-bottom: none;
+            position: relative;
+            background: var(--panel-alt);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         tbody tr:hover {
-            background: #27272A;
+            background: var(--panel-hover);
+            border-color: var(--border-strong);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        td {
-            padding: 1.5rem;
+        tbody td {
+            padding: 1.2rem 1rem;
             vertical-align: middle;
+            text-align: center;
+        }
+
+        tbody td:first-child {
+            text-align: left;
+            padding-left: 1.5rem;
+            border-radius: 16px 0 0 16px;
+        }
+
+        tbody td:last-child {
+            border-radius: 0 16px 16px 0;
         }
 
         .model-cell {
             display: flex;
             align-items: center;
             gap: 1rem;
-            min-width: 240px;
         }
 
         .rank {
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: #52525B;
-            min-width: 2rem;
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 0.95rem;
+            min-width: 2.25rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .provider-emblem {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid var(--border-strong);
+            background: var(--panel);
+            padding: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .provider-emblem svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+            color: var(--text);
         }
 
         .model-info {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.15rem;
+            min-width: 0;
         }
 
         .provider {
             font-size: 0.75rem;
-            color: #71717A;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--brand-red);
             font-weight: 500;
         }
 
         .model-name {
-            font-weight: 600;
-            color: #FAFAFA;
             font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
         }
 
         .score-badge {
             display: inline-flex;
+            min-width: 70px;
             align-items: center;
             justify-content: center;
-            padding: 0.375rem 0.875rem;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border-strong);
+            padding: 0.65rem 0.75rem;
             font-weight: 600;
-            font-size: 0.9375rem;
-            min-width: 4rem;
-            transition: transform 0.2s;
+            font-size: 0.95rem;
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            background: var(--panel-alt);
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
         }
 
         .score-badge:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
         }
 
-        /* Average column - slightly larger */
-        .average-score {
-            font-size: 1.125rem;
-            padding: 0.5rem 1rem;
+        .score-tier-excellent {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.25);
+            color: #16a34a;
             font-weight: 700;
         }
 
-        /* Score colors matching Clerk's scheme */
-        .score-90-100 {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ADE80;
-            border: 1px solid rgba(74, 222, 128, 0.2);
+        .score-tier-normal {
+            background: #eee;
+            border-color: rgba(0, 0, 0, 0.12);
+            color: var(--text-secondary);
         }
 
-        .score-70-89 {
-            background: rgba(96, 165, 250, 0.15);
-            color: #60A5FA;
-            border: 1px solid rgba(96, 165, 250, 0.2);
+        .score-tier-poor {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: #dc2626;
         }
 
-        .score-50-69 {
-            background: rgba(251, 191, 36, 0.15);
-            color: #FBBF24;
-            border: 1px solid rgba(251, 191, 36, 0.2);
-        }
-
-        .score-30-49 {
-            background: rgba(251, 146, 60, 0.15);
-            color: #FB923C;
-            border: 1px solid rgba(251, 146, 60, 0.2);
-        }
-
-        .score-0-29 {
-            background: rgba(239, 68, 68, 0.15);
-            color: #EF4444;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #27272A;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-            justify-content: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .footer-links a {
-            color: #A1A1AA;
-            text-decoration: none;
-            font-size: 0.9375rem;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #FAFAFA;
-        }
-
-        .last-updated {
-            color: #71717A;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
+        .score-empty {
+            color: var(--muted);
+            border-color: var(--border);
+            background: transparent;
         }
 
         .loading {
             text-align: center;
-            padding: 4rem;
-            color: #71717A;
-            font-size: 1.125rem;
+            padding: 2rem;
+            color: var(--muted);
+            font-weight: 500;
         }
 
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+        .loading .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--border);
+            border-top-color: var(--brand-red);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-right: 0.75rem;
+        }
+
+        .error {
+            color: var(--brand-red);
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-top: 2.75rem;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .footer a {
+            color: var(--brand-red);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.15s ease;
+        }
+
+        .footer a:hover {
+            color: var(--brand-orange);
+        }
+
+        .last-updated {
+            color: var(--muted);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .table-card {
+                padding: 1.5rem 1.25rem 1.75rem;
             }
 
-            .subtitle {
-                font-size: 1rem;
-            }
-
-            th, td {
-                padding: 1rem 0.75rem;
-                font-size: 0.875rem;
-            }
-
-            .model-cell {
-                min-width: 200px;
-            }
-
-            .score-badge {
-                padding: 0.25rem 0.625rem;
-                font-size: 0.8125rem;
-                min-width: 3.5rem;
-            }
-
-            .footer-links {
+            .footer {
                 flex-direction: column;
-                gap: 1rem;
+                text-align: center;
             }
         }
     </style>
@@ -259,78 +316,83 @@
 <body>
     <div class="container">
         <header>
-            <h1>LLM Leaderboard</h1>
+            <h1>Openfort's LLM Leaderboard</h1>
             <p class="subtitle">
                 Compare how different large language models perform at writing Openfort code and select the one that best fits your requirements.
             </p>
         </header>
 
-        <div class="table-container">
-            <div id="loading" class="loading">Loading scores...</div>
-            <div class="table-wrapper" id="tableWrapper" style="display: none;">
-                <table>
+        <section class="table-card">
+            <div id="loading" class="loading">
+                <span class="spinner" aria-hidden="true"></span>
+                Loading scores...
+            </div>
+            <div class="table-wrapper" id="tableWrapper" style="display: none;" aria-live="polite">
+                <table class="leaderboard-table">
                     <thead>
-                        <tr>
-                            <th>Model / Average</th>
-                            <th></th>
-                            <div id="categoryHeaders"></div>
+                        <tr id="headerRow">
+                            <th class="column-model">Model</th>
+                            <th>Average</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody">
-                    </tbody>
+                    <tbody id="tbody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="footer">
-            <div class="footer-links">
-                <a href="https://github.com/openfort-xyz/clerk-evals" target="_blank">View Repository</a>
-            </div>
+        <footer class="footer">
+            <a href="https://github.com/openfort-xyz/openfort-evals" target="_blank" rel="noreferrer">View Repository</a>
             <p class="last-updated" id="lastUpdated">Last updated: —</p>
-        </div>
+        </footer>
     </div>
 
     <script>
         function getScoreClass(value) {
-            const percent = value * 100;
-            if (percent >= 90) return 'score-90-100';
-            if (percent >= 70) return 'score-70-89';
-            if (percent >= 50) return 'score-50-69';
-            if (percent >= 30) return 'score-30-49';
-            return 'score-0-29';
+            const percent = Math.round(value * 100);
+            if (percent >= 75) return 'score-tier-excellent';
+            if (percent >= 50) return 'score-tier-normal';
+            return 'score-tier-poor';
         }
 
         function formatPercent(value) {
-            return Math.round(value * 100) + '%';
+            return `${Math.round(value * 100)}%`;
         }
 
         function getProviderFromModel(modelName) {
-            if (modelName.startsWith('gpt')) return 'OpenAI';
-            if (modelName.startsWith('claude')) return 'Anthropic';
-            if (modelName.startsWith('v0')) return 'v0';
+            const normalized = modelName.toLowerCase();
+            if (normalized.startsWith('gpt')) return 'OpenAI';
+            if (normalized.startsWith('claude')) return 'Anthropic';
+            if (normalized.startsWith('v0')) return 'v0';
             return 'Unknown';
+        }
+
+        function getProviderLogo(provider) {
+            const logos = {
+                'OpenAI': '<svg role="img" viewBox="0 0 24 24"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"></path></svg>',
+                'Anthropic': '<svg role="img" viewBox="0 0 24 24"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"></path></svg>',
+                'v0': '<svg role="img" viewBox="0 0 16 16" stroke-linejoin="round"><path clip-rule="evenodd" d="M9.50321 5.5H13.2532C13.3123 5.5 13.3704 5.5041 13.4273 5.51203L9.51242 9.42692C9.50424 9.36912 9.5 9.31006 9.5 9.25L9.5 5.5L8 5.5L8 9.25C8 10.7688 9.23122 12 10.75 12H14.5V10.5L10.75 10.5C10.6899 10.5 10.6309 10.4958 10.5731 10.4876L14.4904 6.57028C14.4988 6.62897 14.5032 6.68897 14.5032 6.75V10.5H16.0032V6.75C16.0032 5.23122 14.772 4 13.2532 4H9.50321V5.5ZM0 5V5.00405L5.12525 11.5307C5.74119 12.3151 7.00106 11.8795 7.00106 10.8822V5H5.50106V9.58056L1.90404 5H0Z" fill-rule="evenodd"></path></svg>'
+            };
+            return logos[provider] || '';
         }
 
         async function loadLeaderboard() {
             try {
                 const response = await fetch('scores.json');
                 if (!response.ok) throw new Error('Failed to load scores');
-                
-                const scores = await response.json();
 
-                // Group by model
+                const scores = await response.json();
                 const modelData = {};
                 const categories = new Set();
                 let lastUpdated = null;
 
-                scores.forEach(score => {
+                scores.forEach((score) => {
                     if (!modelData[score.model]) {
                         modelData[score.model] = {
                             label: score.label,
                             model: score.model,
                             scores: {},
                             total: 0,
-                            count: 0
+                            count: 0,
                         };
                     }
 
@@ -344,35 +406,42 @@
                     }
                 });
 
-                // Calculate averages and sort
                 const models = Object.values(modelData)
-                    .map(model => ({
+                    .map((model) => ({
                         ...model,
-                        average: model.total / model.count
+                        average: model.total / Math.max(model.count, 1),
                     }))
                     .sort((a, b) => b.average - a.average);
 
                 const categoryArray = Array.from(categories).sort();
 
-                // Render table header with categories
-                const thead = document.querySelector('thead tr');
-                categoryArray.forEach(cat => {
+                const headerRow = document.getElementById('headerRow');
+                const existingHeaders = headerRow.querySelectorAll('th:not(.column-model)');
+                existingHeaders.forEach((node, index) => {
+                    if (index > 0) node.remove(); // Keep Average column, remove category columns
+                });
+                categoryArray.forEach((cat) => {
                     const th = document.createElement('th');
                     th.textContent = cat;
-                    thead.appendChild(th);
+                    headerRow.appendChild(th);
                 });
 
-                // Render table body
                 const tbody = document.getElementById('tbody');
+                tbody.innerHTML = '';
+
                 models.forEach((model, index) => {
                     const tr = document.createElement('tr');
-                    
-                    // Model column
-                    const modelCell = document.createElement('td');
+
                     const provider = getProviderFromModel(model.model);
+                    const logoSvg = getProviderLogo(provider);
+                    
+                    const modelCell = document.createElement('td');
                     modelCell.innerHTML = `
                         <div class="model-cell">
-                            <span class="rank">${index + 1}</span>
+                            <span class="rank">${String(index + 1).padStart(2, '0')}</span>
+                            <span class="provider-emblem" data-provider="${provider}">
+                                ${logoSvg}
+                            </span>
                             <div class="model-info">
                                 <span class="provider">${provider}</span>
                                 <span class="model-name">${model.label}</span>
@@ -381,19 +450,17 @@
                     `;
                     tr.appendChild(modelCell);
 
-                    // Average column
-                    const avgCell = document.createElement('td');
-                    avgCell.innerHTML = `<span class="score-badge average-score ${getScoreClass(model.average)}">${formatPercent(model.average)}</span>`;
-                    tr.appendChild(avgCell);
+                    const averageCell = document.createElement('td');
+                    averageCell.innerHTML = `<span class="score-badge ${getScoreClass(model.average)}">${formatPercent(model.average)}</span>`;
+                    tr.appendChild(averageCell);
 
-                    // Category columns
-                    categoryArray.forEach(cat => {
+                    categoryArray.forEach((cat) => {
                         const td = document.createElement('td');
                         const value = model.scores[cat];
-                        if (value !== undefined) {
+                        if (typeof value === 'number') {
                             td.innerHTML = `<span class="score-badge ${getScoreClass(value)}">${formatPercent(value)}</span>`;
                         } else {
-                            td.innerHTML = '<span class="score-badge score-0-29">—</span>';
+                            td.innerHTML = '<span class="score-badge score-empty">—</span>';
                         }
                         tr.appendChild(td);
                     });
@@ -401,26 +468,24 @@
                     tbody.appendChild(tr);
                 });
 
-                // Update last updated date
                 if (lastUpdated) {
                     const date = new Date(lastUpdated);
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    document.getElementById('lastUpdated').textContent = 
-                        `Last updated: ${date.toLocaleDateString('en-US', options)}`;
+                    document.getElementById('lastUpdated').textContent = `Last updated: ${date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    })}`;
                 }
 
-                // Show table
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('tableWrapper').style.display = 'block';
-
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
-                document.getElementById('loading').innerHTML = 
-                    '<p style="color: #EF4444;">Error loading scores. Please make sure scores.json exists in the same directory.</p>';
+                const loading = document.getElementById('loading');
+                loading.innerHTML = '<span class="error">Error loading scores. Please make sure scores.json exists in the same directory.</span>';
             }
         }
 
-        // Load leaderboard on page load
         loadLeaderboard();
     </script>
 </body>
