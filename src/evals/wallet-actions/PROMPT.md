@@ -7,7 +7,5 @@ Implement wallet actions (signing and sending transactions) in a React applicati
 Create a React app that:
 
 1. Configures Openfort properly
-2. Demonstrates message and typed data signing
-3. Demonstrates sending transactions and interacting with smart contracts
-4. Uses appropriate hooks for wallet operations
-5. Handles transaction status and errors
+2. Demonstrates message signing
+3. Demonstrates sending transactions

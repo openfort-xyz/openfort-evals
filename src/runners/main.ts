@@ -25,7 +25,6 @@ export default async function exec({
   provider,
   model,
   evalPath,
-  debug = false,
 }: RunnerArgs): Promise<RunnerResult> {
   // Determine the language model
   const languageModel = getModel(provider, model)
@@ -62,13 +61,11 @@ export default async function exec({
 
     return OK({
       score,
-      debug: debug
-        ? {
-            prompt,
-            response: response.text,
-            graders: graderResults,
-          }
-        : undefined,
+      debug: {
+        prompt,
+        response: response.text,
+        graders: graderResults,
+      },
     })
   } catch (error) {
     return ERR(error)

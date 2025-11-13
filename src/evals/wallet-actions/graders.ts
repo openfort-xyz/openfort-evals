@@ -3,15 +3,15 @@ import { contains, containsAny, defineGraders, judge } from '@/src/graders'
 export const graders = defineGraders({
   uses_wallet_client: containsAny(['useWalletClient', 'walletClient', 'wallet client']),
   uses_account_hook: contains('useAccount'),
-  demonstrates_signing: containsAny(['useSignMessage', 'signMessage', 'sign message', 'signing']),
+  demonstrates_signing: containsAny(['signMessage', 'writeContract']),
+  uses_wait_transaction_receipt: contains('useWaitForTransactionReceipt'),
   demonstrates_transactions: containsAny([
-    'useSendTransaction',
-    'sendTransaction',
-    'send transaction',
-    'transaction',
+    'useWriteContract',
+    'writeContract',
   ]),
+  there_is_an_address: containsAny(['address']),
   handles_transaction_status: containsAny([
-    'transaction status',
+    'isLoading',
     'isPending',
     'isSuccess',
     'isError',
@@ -23,5 +23,4 @@ export const graders = defineGraders({
   shows_blockchain_interaction: judge(
     'Does the code demonstrate practical blockchain interaction (reading/writing data, sending transactions)?',
   ),
-  uses_proper_types: judge('Does the code use TypeScript with proper types for wallet operations?'),
 })

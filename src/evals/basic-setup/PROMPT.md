@@ -10,4 +10,3 @@ Create a React app that:
 2. Creates a `Providers` component that properly configures and wraps the application with all required providers for an Ethereum app
 3. Configures the app to connect to the **Base Sepolia** testnet chain
 4. Uses environment variables for sensitive keys
-5. Includes a basic UI element to interact with Openfort (e.g., a connect wallet button)

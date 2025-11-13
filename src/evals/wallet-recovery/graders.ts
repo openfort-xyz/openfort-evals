@@ -3,27 +3,20 @@ import { contains, containsAny, defineGraders, judge } from '@/src/graders'
 export const graders = defineGraders({
   configures_wallet_recovery: contains('walletRecovery'),
   uses_recovery_method_enum: contains('RecoveryMethod'),
+  uses_shield_key: containsAny(['publishableKey', 'PUBLISHABLE_KEY']),
+  uses_publishable_key: containsAny(['shieldPublishableKey', 'SHIELD_PUBLISHABLE_KEY']),
   mentions_automatic_recovery: containsAny([
     'RecoveryMethod.AUTOMATIC',
-    'AUTOMATIC',
-    'automatic recovery',
   ]),
   mentions_passkey_recovery: containsAny([
     'RecoveryMethod.PASSKEY',
-    'PASSKEY',
-    'passkey',
-    'biometric',
   ]),
   mentions_password_recovery: containsAny([
     'RecoveryMethod.PASSWORD',
-    'PASSWORD',
-    'password recovery',
   ]),
-  sets_default_method: containsAny(['defaultMethod', 'default method']),
+  sets_default_method: containsAny(['defaultMethod']),
   has_encryption_session_endpoint: containsAny([
     'createEncryptedSessionEndpoint',
-    'encryption session',
-    'encrypted session',
   ]),
   explains_recovery_flow: judge(
     'Does the code explain or demonstrate how the wallet recovery process works for users?',

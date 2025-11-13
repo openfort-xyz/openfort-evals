@@ -34,7 +34,7 @@ const models: ModelInfo[] = [
   { provider: 'openai', name: 'gpt-5-chat-latest', label: 'GPT-5 Chat' },
   { provider: 'anthropic', name: 'claude-sonnet-4-0', label: 'Claude Sonnet 4' },
   { provider: 'anthropic', name: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
-  { provider: 'anthropic', name: 'claude-opus-4-0', label: 'Claude Opus 4' },
+  // { provider: 'anthropic', name: 'claude-opus-4-0', label: 'Claude Opus 4' },
   { provider: 'vercel', name: 'v0-1.5-md', label: 'v0-1.5-md' },
 ]
 
@@ -107,7 +107,6 @@ Options:
   --help, -h              Show this help message
   --eval, -e <path>       Run a specific evaluation (e.g., evals/basic-setup)
   --model, -m <models>    Run only for specific model(s) (e.g., gpt-4o or gpt-4o,claude-sonnet-4-5)
-  --debug, -d             Enable debug mode (saves prompts, responses, and grading details)
 
 Available models:
 ${models.map((m) => `  - ${m.name} (${m.label})`).join('\n')}
@@ -120,31 +119,8 @@ Examples:
   bun start --eval evals/basic-setup             # Run one eval on all models
   bun start --model claude-sonnet-4-5            # Run all evals on one model
   bun start --model gpt-4o,claude-sonnet-4-5     # Run all evals on multiple models
-  bun start --eval evals/basic-setup --model gpt-4o --debug
 `)
   process.exit(0)
-}
-
-const parseBooleanFlag = (name: string, alias?: string) => {
-  const equalsArg = args.find((arg) => arg.startsWith(`--${name}=`))
-  if (equalsArg) {
-    const [, rawValue] = equalsArg.split('=', 2)
-    const value = rawValue?.toLowerCase()
-    return !['false', '0', 'no'].includes(value ?? '')
-  }
-
-  const index = args.findIndex((arg) => arg === `--${name}` || (alias && arg === alias))
-
-  if (index === -1) {
-    return false
-  }
-
-  const value = args[index + 1]
-  if (value && !value.startsWith('-')) {
-    return !['false', '0', 'no'].includes(value.toLowerCase())
-  }
-
-  return true
 }
 
 const getEvalArg = () => {
@@ -171,7 +147,10 @@ const getModelArg = () => {
   const equalsArg = args.find((arg) => arg.startsWith('--model='))
   if (equalsArg) {
     const value = equalsArg.split('=', 2)[1]
-    return value?.split(',').map((m) => m.trim()).filter(Boolean)
+    return value
+      ?.split(',')
+      .map((m) => m.trim())
+      .filter(Boolean)
   }
 
   const index = args.findIndex((arg) => arg === '--model' || arg === '-m')
@@ -185,7 +164,10 @@ const getModelArg = () => {
     process.exit(1)
   }
 
-  return value.split(',').map((m) => m.trim()).filter(Boolean)
+  return value
+    .split(',')
+    .map((m) => m.trim())
+    .filter(Boolean)
 }
 
 const normalizeEvalPath = (value: string) => {
@@ -205,8 +187,6 @@ if (args.includes('--help') || args.includes('-h')) {
 
 const evalArg = getEvalArg()
 const modelArg = getModelArg()
-
-const debugEnabled = parseBooleanFlag('debug', '-d')
 
 const selectedEvaluations = (() => {
   if (!evalArg) {
@@ -241,9 +221,7 @@ const selectedModels = (() => {
   }
 
   const targets = modelArg.map((arg) => {
-    const target = models.find(
-      (model) => model.name === arg || model.label === arg,
-    )
+    const target = models.find((model) => model.name === arg || model.label === arg)
 
     if (!target) {
       console.error(
@@ -260,9 +238,7 @@ const selectedModels = (() => {
   if (targets.length === 1 && targets[0]) {
     console.log(`Running for single model "${targets[0].name}" (${targets[0].label})`)
   } else {
-    console.log(
-      `Running for ${targets.length} models: ${targets.map((m) => m.name).join(', ')}`,
-    )
+    console.log(`Running for ${targets.length} models: ${targets.map((m) => m.name).join(', ')}`)
   }
 
   return targets
@@ -271,15 +247,10 @@ const selectedModels = (() => {
 const debugArtifacts: DebugArtifact[] = []
 const debugErrors: DebugError[] = []
 
-let debugRunDirectory: string | undefined
-let debugRunTimestamp: string | undefined
-
-if (debugEnabled) {
-  debugRunTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  debugRunDirectory = path.join(process.cwd(), 'debug-runs', debugRunTimestamp)
-  await mkdir(debugRunDirectory, { recursive: true })
-  console.log(`Debug mode enabled. Saving outputs to ${debugRunDirectory}`)
-}
+const debugRunTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
+const debugRunDirectory = path.join(process.cwd(), 'debug-runs', debugRunTimestamp)
+await mkdir(debugRunDirectory, { recursive: true })
+console.log(`Saving outputs to ${debugRunDirectory}`)
 
 // Collect list of tasks to be run
 const tasks = selectedModels.flatMap((model) =>
@@ -312,7 +283,6 @@ await Promise.all(
       evalPath: task.evalPath,
       provider: task.provider as Provider,
       model: task.model,
-      debug: debugEnabled,
     }
 
     try {
@@ -327,14 +297,12 @@ await Promise.all(
           task,
           error: result.error,
         })
-        if (debugEnabled) {
-          debugErrors.push({
-            provider: task.provider,
-            model: task.model,
-            evaluationPath: task.evaluationPath,
-            error: result.error,
-          })
-        }
+        debugErrors.push({
+          provider: task.provider,
+          model: task.model,
+          evaluationPath: task.evaluationPath,
+          error: result.error,
+        })
         return
       }
 
@@ -348,19 +316,17 @@ await Promise.all(
       }
       scores.push(score)
 
-      if (debugEnabled && result.value.debug) {
-        debugArtifacts.push({
-          provider: task.provider,
-          model: task.model,
-          framework: task.framework,
-          category: task.category,
-          evaluationPath: task.evaluationPath,
-          score: result.value.score,
-          prompt: result.value.debug.prompt,
-          response: result.value.debug.response,
-          graders: result.value.debug.graders,
-        })
-      }
+      debugArtifacts.push({
+        provider: task.provider,
+        model: task.model,
+        framework: task.framework,
+        category: task.category,
+        evaluationPath: task.evaluationPath,
+        score: result.value.score,
+        prompt: result.value.debug.prompt,
+        response: result.value.debug.response,
+        graders: result.value.debug.graders,
+      })
     } finally {
       completed += 1
       console.log(`[done  ${completed}/${tasks.length}] ${task.model} → ${task.evaluationPath}`)
@@ -370,25 +336,24 @@ await Promise.all(
 
 const sanitizeForFilename = (value: string) => value.replace(/[^a-zA-Z0-9._-]/g, '_')
 
-if (debugEnabled && debugRunDirectory && debugRunTimestamp) {
-  for (const artifact of debugArtifacts) {
-    const evaluationSlug = artifact.evaluationPath.split('/').filter(Boolean).join('__')
-    const evaluationDir = path.join(debugRunDirectory, evaluationSlug)
-    await mkdir(evaluationDir, { recursive: true })
+for (const artifact of debugArtifacts) {
+  const evaluationSlug = artifact.evaluationPath.split('/').filter(Boolean).join('__')
+  const evaluationDir = path.join(debugRunDirectory, evaluationSlug)
+  await mkdir(evaluationDir, { recursive: true })
 
-    const fileSafeName = sanitizeForFilename(`${artifact.provider}__${artifact.model}`)
+  const fileSafeName = sanitizeForFilename(`${artifact.provider}__${artifact.model}`)
 
-    const gradersRows =
-      artifact.graders.length > 0
-        ? artifact.graders
-            .map(
-              // TODO(voz): To make things pretty we could swap true/false for ✅/❌
-              ([name, passed]) => `| ${name} | ${passed ? 'true' : 'false'} |`,
-            )
-            .join('\n')
-        : '| (none) | - |'
+  const gradersRows =
+    artifact.graders.length > 0
+      ? artifact.graders
+          .map(
+            // TODO(voz): To make things pretty we could swap true/false for ✅/❌
+            ([name, passed]) => `| ${name} | ${passed ? 'true' : 'false'} |`,
+          )
+          .join('\n')
+      : '| (none) | - |'
 
-    const debugContent = `---
+  const debugContent = `---
 provider: ${artifact.provider}
 model: ${artifact.model}
 framework: ${artifact.framework}
@@ -414,20 +379,15 @@ ${artifact.response.trimEnd()}
 ${gradersRows}
 `
 
-    const filePath = path.join(evaluationDir, `${fileSafeName}.md`)
-    await writeFile(filePath, debugContent, 'utf8')
-  }
+  const filePath = path.join(evaluationDir, `${fileSafeName}.md`)
+  await writeFile(filePath, debugContent, 'utf8')
+}
 
-  if (debugErrors.length > 0) {
-    const errorsPath = path.join(debugRunDirectory, 'errors.json')
-    await writeFile(errorsPath, JSON.stringify(debugErrors, null, 2), 'utf8')
-  }
+if (debugErrors.length > 0) {
+  const errorsPath = path.join(debugRunDirectory, 'errors.json')
+  await writeFile(errorsPath, JSON.stringify(debugErrors, null, 2), 'utf8')
 }
 
 // Report
 fileReporter(scores)
-if (debugEnabled) {
-  consoleReporter(scores)
-} else {
-  console.log('Scores written to: scores.json')
-}
+consoleReporter(scores)

@@ -1,13 +1,21 @@
 # Task
 
-Implement authentication in a React application using Openfort.
+Build a React application that implements authentication using Openfort's React SDK.
 
 ## Requirements
 
-Create a React app that:
+Your application must:
 
-1. Supports multiple authentication methods (email, social, guest, and wallet)
-2. Configures authentication providers properly
-3. Provides UI for user authentication
-4. Checks and displays authentication state
-5. Handles login and logout flows
+1. **Configure the Openfort React SDK** with:
+   - All necessary provider configuration including API keys
+   - Required React provider wrappers for Openfort functionality
+
+2. **Implement these FOUR authentication methods using Openfort's React hooks**:
+   - Email-based authentication (with sign up and sign in)
+   - Social authentication (Google, Facebook, or Twitter)
+   - Wallet-based authentication (using Sign-In with Ethereum)
+   - Guest/anonymous authentication
+
+3. **Manage user authentication state using Openfort's React hooks**:
+   - Show how to access the current user's information
+   - Implement sign out functionality

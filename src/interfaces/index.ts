@@ -13,7 +13,7 @@ export type RunnerDebugPayload = {
  */
 export type RunnerResult = Result<{
   score: number
-  debug?: RunnerDebugPayload
+  debug: RunnerDebugPayload
 }>
 
 /**
@@ -23,7 +23,6 @@ export type RunnerArgs = {
   provider: Provider
   model: string
   evalPath: string
-  debug?: boolean
 }
 
 /**

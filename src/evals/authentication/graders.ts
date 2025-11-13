@@ -1,22 +1,28 @@
 import { contains, containsAny, defineGraders, judge } from '@/src/graders'
 
 export const graders = defineGraders({
-  configures_auth_providers: containsAny(['authProviders', 'auth providers']),
-  uses_auth_provider_enum: contains('AuthProvider'),
-  mentions_email_auth: containsAny(['AuthProvider.EMAIL', 'email auth', 'EMAIL']),
-  mentions_social_auth: containsAny([
-    'AuthProvider.GOOGLE',
-    'AuthProvider.FACEBOOK',
-    'AuthProvider.TWITTER',
-    'GOOGLE',
-    'social',
-  ]),
-  mentions_guest_auth: containsAny(['AuthProvider.GUEST', 'GUEST', 'guest']),
-  mentions_wallet_auth: containsAny(['AuthProvider.WALLET', 'WALLET', 'wallet auth']),
+  // Provider setup
+  has_openfort_provider: contains('OpenfortProvider'),
+  has_publishable_key: contains('publishableKey'),
+  has_shield_key: contains('shieldPublishableKey'),
+  has_wagmi_provider: contains('WagmiProvider'),
+  has_query_client_provider: contains('QueryClientProvider'),
   has_ui_config: contains('uiConfig'),
-  uses_openfort_button: containsAny(['OpenfortButton', 'openfort button']),
-  demonstrates_auth_state: judge(
-    'Does the code demonstrate how to check or access authentication state using hooks or similar methods?',
-  ),
-  shows_login_logout: judge('Does the code show or explain how users can log in and log out?'),
+
+  // Authentication hooks
+  uses_email_auth: contains('useEmailAuth'),
+  uses_oauth: contains('useOAuth'),
+  uses_oauth_provider_enum: contains('OAuthProvider'),
+  uses_wallet_auth: contains('useWalletAuth'),
+  uses_guest_auth: contains('useGuestAuth'),
+
+  // Hooks methods
+  uses_email_methods: containsAny(['signInEmail', 'signUpEmail']),
+  uses_oauth_methods: containsAny(['initOAuth']),
+  uses_wallet_oauth_methods: containsAny(['generateSiweMessage', 'signInWithSiwe']),
+  uses_guest_methods: containsAny(['signUpGuest']),
+
+  // State management hooks
+  uses_user_hook: contains('useUser'),
+  uses_sign_out_hook: contains('useSignOut'),
 })
