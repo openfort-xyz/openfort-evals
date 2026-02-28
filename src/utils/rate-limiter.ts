@@ -11,6 +11,7 @@ type ProviderKey = string
 const DEFAULT_RATE_LIMITS = {
   openai: 500, // Usage tier 1
   anthropic: 5, // Free tier
+  google: 60, // Default
   vercel: 10, // Free tier (10 requests per day)
 } as const
 
@@ -129,6 +130,12 @@ function parseRateLimitConfig(): Map<ProviderKey, number> {
     10,
   )
   delays.set('anthropic', Math.ceil(60000 / anthropicRPM))
+
+  const googleRPM = Number.parseInt(
+    process.env.GOOGLE_RATE_LIMIT_RPM || String(DEFAULT_RATE_LIMITS.google),
+    10,
+  )
+  delays.set('google', Math.ceil(60000 / googleRPM))
 
   const vercelRPM = Number.parseInt(
     process.env.VERCEL_RATE_LIMIT_RPM || String(DEFAULT_RATE_LIMITS.vercel),

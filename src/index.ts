@@ -5,38 +5,24 @@ import Tinypool from 'tinypool'
 
 import type {
   Evaluation,
+  MCPRunnerArgs,
   RunnerArgs,
   RunnerDebugPayload,
   RunnerResult,
   Score,
 } from '@/src/interfaces'
-import type { ModelInfo, Provider } from '@/src/providers'
+import { getAllModels, getModelsByProvider, type ModelInfo, type Provider } from '@/src/providers'
 import consoleReporter from '@/src/reporters/console'
 import fileReporter from '@/src/reporters/file'
 import { rateLimiter } from '@/src/utils/rate-limiter'
 
-// Create a pool of workers to execute the main runner
-const pool = new Tinypool({
-  runtime: 'child_process',
-  filename: new URL('./runners/main.ts', import.meta.url).href,
-  isolateWorkers: true,
-  idleTimeout: 10000,
-  maxThreads: 10,
-})
+const DEFAULT_MCP_URL = 'https://mcp.openfort.io/sse'
 
 /**
- * Registered models
- * To be manually updated
+ * Registered models - all latest models across all providers.
+ * To filter at runtime use --provider or --model flags.
  */
-const models: ModelInfo[] = [
-  { provider: 'openai', name: 'gpt-4o', label: 'GPT-4o' },
-  { provider: 'openai', name: 'gpt-5', label: 'GPT-5' },
-  { provider: 'openai', name: 'gpt-5-chat-latest', label: 'GPT-5 Chat' },
-  { provider: 'anthropic', name: 'claude-sonnet-4-0', label: 'Claude Sonnet 4' },
-  { provider: 'anthropic', name: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
-  // { provider: 'anthropic', name: 'claude-opus-4-0', label: 'Claude Opus 4' },
-  { provider: 'vercel', name: 'v0-1.5-md', label: 'v0-1.5-md' },
-]
+const models: ModelInfo[] = getAllModels()
 
 /**
  * Registered evaluations
@@ -73,6 +59,11 @@ const evaluations = [
     category: 'Hooks',
     path: 'evals/hooks-usage',
   },
+  {
+    framework: 'MCP',
+    category: 'MCP Server',
+    path: 'evals/mcp-server',
+  },
 ] satisfies Evaluation[]
 
 type DebugArtifact = {
@@ -96,6 +87,29 @@ type DebugError = {
 
 const args = process.argv.slice(2)
 
+const parseStringArg = (longFlag: string, shortFlag?: string): string | undefined => {
+  const equalsArg = args.find((arg) => arg.startsWith(`--${longFlag}=`))
+  if (equalsArg) {
+    return equalsArg.split('=', 2)[1]
+  }
+
+  const index = args.findIndex((arg) => arg === `--${longFlag}` || (shortFlag && arg === shortFlag))
+  if (index === -1) {
+    return undefined
+  }
+
+  const value = args[index + 1]
+  if (!value || value.startsWith('-')) {
+    return undefined
+  }
+
+  return value
+}
+
+const parseBooleanFlag = (flag: string): boolean => {
+  return args.includes(`--${flag}`)
+}
+
 const showHelp = () => {
   console.log(`
 Openfort Evals - Evaluate LLMs on Openfort code generation
@@ -106,7 +120,9 @@ Usage:
 Options:
   --help, -h              Show this help message
   --eval, -e <path>       Run a specific evaluation (e.g., evals/basic-setup)
-  --model, -m <models>    Run only for specific model(s) (e.g., gpt-4o or gpt-4o,claude-sonnet-4-5)
+  --model, -m <models>    Run only for specific model(s) (e.g., gpt-4.1 or gpt-4.1,claude-opus-4-6)
+  --provider, -p <name>   Run only for a specific provider (openai, anthropic, google, vercel)
+  --mcp                   Enable MCP tool support (connects to Openfort MCP server)
 
 Available models:
 ${models.map((m) => `  - ${m.name} (${m.label})`).join('\n')}
@@ -117,8 +133,11 @@ ${evaluations.map((e) => `  - ${e.path} (${e.category})`).join('\n')}
 Examples:
   bun start                                      # Run all evals on all models
   bun start --eval evals/basic-setup             # Run one eval on all models
-  bun start --model claude-sonnet-4-5            # Run all evals on one model
-  bun start --model gpt-4o,claude-sonnet-4-5     # Run all evals on multiple models
+  bun start --model claude-opus-4-6              # Run all evals on one model
+  bun start --model gpt-4.1,claude-opus-4-6      # Run all evals on multiple models
+  bun start --provider google                    # Run all evals on Google models only
+  bun start --mcp                                # Run all evals with MCP tool support
+  bun start --mcp --eval evals/mcp-server        # Run MCP server eval with MCP tools
 `)
   process.exit(0)
 }
@@ -187,6 +206,8 @@ if (args.includes('--help') || args.includes('-h')) {
 
 const evalArg = getEvalArg()
 const modelArg = getModelArg()
+const providerFilter = parseStringArg('provider', '-p')
+const mcpEnabled = parseBooleanFlag('mcp')
 
 const selectedEvaluations = (() => {
   if (!evalArg) {
@@ -216,33 +237,61 @@ const selectedEvaluations = (() => {
 })()
 
 const selectedModels = (() => {
-  if (!modelArg || modelArg.length === 0) {
-    return models
+  // Apply provider filter first
+  let filteredModels = providerFilter
+    ? getModelsByProvider(providerFilter.toLowerCase() as Provider)
+    : models
+
+  // Then apply model filter
+  if (modelArg && modelArg.length > 0) {
+    const targets = modelArg.map((arg) => {
+      const target = filteredModels.find((model) => model.name === arg || model.label === arg)
+
+      if (!target) {
+        console.error(
+          `No model matching "${arg}". Available models: ${filteredModels
+            .map((model) => `${model.name} (${model.label})`)
+            .join(', ')}`,
+        )
+        process.exit(1)
+      }
+
+      return target
+    })
+
+    filteredModels = targets
   }
 
-  const targets = modelArg.map((arg) => {
-    const target = models.find((model) => model.name === arg || model.label === arg)
+  if (filteredModels.length === 0) {
+    const filter = modelArg ? `model="${modelArg}"` : `provider="${providerFilter}"`
+    console.error(`No models match filter: ${filter}`)
+    process.exit(1)
+  }
 
-    if (!target) {
-      console.error(
-        `No model matching "${arg}". Available models: ${models
-          .map((model) => `${model.name} (${model.label})`)
-          .join(', ')}`,
-      )
-      process.exit(1)
-    }
-
-    return target
-  })
-
-  if (targets.length === 1 && targets[0]) {
-    console.log(`Running for single model "${targets[0].name}" (${targets[0].label})`)
+  if (filteredModels.length === 1 && filteredModels[0]) {
+    console.log(`Running for single model "${filteredModels[0].name}" (${filteredModels[0].label})`)
   } else {
-    console.log(`Running for ${targets.length} models: ${targets.map((m) => m.name).join(', ')}`)
+    console.log(
+      `Running for ${filteredModels.length} models: ${filteredModels.map((m) => m.name).join(', ')}`,
+    )
   }
 
-  return targets
+  return filteredModels
 })()
+
+// Select the runner based on --mcp flag
+const runnerPath = mcpEnabled ? './runners/mcp.ts' : './runners/main.ts'
+
+// Create a pool of workers to execute the runner
+const pool = new Tinypool({
+  runtime: 'child_process',
+  filename: new URL(runnerPath, import.meta.url).href,
+  isolateWorkers: true,
+  idleTimeout: 10000,
+  maxThreads: 10,
+})
+
+const mcpUrl = process.env.MCP_SERVER_URL_OVERRIDE || DEFAULT_MCP_URL
 
 const debugArtifacts: DebugArtifact[] = []
 const debugErrors: DebugError[] = []
@@ -251,6 +300,10 @@ const debugRunTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
 const debugRunDirectory = path.join(process.cwd(), 'debug-runs', debugRunTimestamp)
 await mkdir(debugRunDirectory, { recursive: true })
 console.log(`Saving outputs to ${debugRunDirectory}`)
+
+if (mcpEnabled) {
+  console.log(`MCP enabled — connecting to ${mcpUrl}`)
+}
 
 // Collect list of tasks to be run
 const tasks = selectedModels.flatMap((model) =>
@@ -279,11 +332,16 @@ let completed = 0
 await Promise.all(
   tasks.map(async (task, index) => {
     console.log(`[start ${index + 1}/${tasks.length}] ${task.model} → ${task.evaluationPath}`)
-    const runnerArgs: RunnerArgs = {
+
+    const baseArgs: RunnerArgs = {
       evalPath: task.evalPath,
       provider: task.provider as Provider,
       model: task.model,
     }
+
+    const runnerArgs: RunnerArgs | MCPRunnerArgs = mcpEnabled
+      ? { ...baseArgs, mcpServerUrl: mcpUrl, maxToolRounds: 10 }
+      : baseArgs
 
     try {
       // Schedule task through rate limiter to prevent API rate limit errors
@@ -306,9 +364,10 @@ await Promise.all(
         return
       }
 
+      const labelSuffix = mcpEnabled ? ' (MCP)' : ''
       const score: Score = {
         model: task.model,
-        label: task.label,
+        label: `${task.label}${labelSuffix}`,
         framework: task.framework,
         category: task.category,
         value: result.value.score,
@@ -389,5 +448,6 @@ if (debugErrors.length > 0) {
 }
 
 // Report
-fileReporter(scores)
+const outputFile = mcpEnabled ? 'scores-mcp.json' : 'scores.json'
+fileReporter(scores, outputFile)
 consoleReporter(scores)

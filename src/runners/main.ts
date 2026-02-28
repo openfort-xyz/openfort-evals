@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { generateText } from 'ai'
+import { generateText, type LanguageModel } from 'ai'
 import type { Graders } from '@/src/graders'
 import type { RunnerArgs, RunnerResult } from '@/src/interfaces'
 import { getModel } from '@/src/providers'
@@ -38,7 +38,7 @@ export default async function exec({
 
     // Generate the answer
     const response = await generateText({
-      model: languageModel,
+      model: languageModel as LanguageModel,
       prompt,
       system: systemPrompt,
     })
