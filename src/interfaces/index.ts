@@ -28,7 +28,7 @@ export type RunnerArgs = {
 /**
  * Supported frameworks
  */
-export type Framework = 'Next.js' // TODO(voz): Add more frameworks in the future
+export type Framework = 'React' | 'Node.js' | 'Next.js' | 'MCP'
 
 /**
  * Categories we test
@@ -39,6 +39,15 @@ export type Evaluation = {
   category: Category
   /** e.g. "evals/basic-nextjs" */
   path: string
+}
+
+/**
+ * Arguments for the MCP runner (extends RunnerArgs with MCP-specific options)
+ */
+export type MCPRunnerArgs = RunnerArgs & {
+  mcpServerUrl: string
+  maxToolRounds?: number
+  debug?: boolean
 }
 
 /**

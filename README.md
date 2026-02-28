@@ -19,6 +19,39 @@ bun i
 bun start
 ```
 
+## Supported Models
+
+The eval suite supports the following models across all major providers:
+
+| Provider | Models |
+|----------|--------|
+| **OpenAI** | gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, gpt-4o, gpt-5, o3, o3-mini, o4-mini |
+| **Anthropic** | claude-opus-4-6, claude-sonnet-4-5, claude-haiku-4-5 |
+| **Google** | gemini-2.5-pro, gemini-2.5-flash |
+| **Vercel** | v0-1.5-md |
+
+## CLI Options
+
+```bash
+bun start                                      # Run all evals on all models
+bun start --eval evals/basic-setup             # Run one eval on all models
+bun start --model claude-opus-4-6              # Run all evals on one model
+bun start --model gpt-4.1,claude-opus-4-6      # Run all evals on multiple models
+bun start --provider google                    # Run all evals on Google models only
+bun start --mcp                                # Run all evals with MCP tool support
+bun start --mcp --eval evals/mcp-server        # Run MCP server eval with MCP tools
+```
+
+### MCP Mode
+
+The `--mcp` flag enables MCP (Model Context Protocol) tool support. When enabled, models can access the Openfort MCP server tools during evaluation, testing their ability to leverage documentation and API tools.
+
+The default MCP server URL is `https://mcp.openfort.io/sse`. Override it with `MCP_SERVER_URL_OVERRIDE` in your `.env` file.
+
+```bash
+bun start:mcp                                  # Shortcut for bun start --mcp
+```
+
 ## Add a new evaluation
 
 For detailed, copy-pastable steps see [`docs/ADDING_EVALS.md`](./docs/ADDING_EVALS.md). In short:
@@ -34,70 +67,45 @@ For detailed, copy-pastable steps see [`docs/ADDING_EVALS.md`](./docs/ADDING_EVA
 ```json
 [
   {
-    "model": "gpt-5-chat-latest",
+    "model": "gpt-4.1",
+    "label": "GPT-4.1",
     "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.6666666666666666,
-    "updatedAt": "2025-10-15T17:51:27.901Z"
+    "category": "Setup",
+    "value": 0.85,
+    "updatedAt": "2026-02-28T12:00:00.000Z"
   },
   {
-    "model": "gpt-4o",
+    "model": "claude-opus-4-6",
+    "label": "Claude Opus 4.6",
     "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.3333333333333333,
-    "updatedAt": "2025-10-15T17:51:30.871Z"
+    "category": "Setup",
+    "value": 0.92,
+    "updatedAt": "2026-02-28T12:00:00.000Z"
   },
   {
-    "model": "claude-sonnet-4-0",
+    "model": "gemini-2.5-pro",
+    "label": "Gemini 2.5 Pro",
     "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.5,
-    "updatedAt": "2025-10-15T17:51:56.370Z"
-  },
-  {
-    "model": "claude-sonnet-4-5",
-    "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.8333333333333334,
-    "updatedAt": "2025-10-15T17:52:03.349Z"
-  },
-  {
-    "model": "v0-1.5-md",
-    "framework": "React",
-    "category": "Fundamentals",
-    "value": 1,
-    "updatedAt": "2025-10-15T17:52:06.700Z"
-  },
-  {
-    "model": "claude-opus-4-0",
-    "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.5,
-    "updatedAt": "2025-10-15T17:52:06.898Z"
-  },
-  {
-    "model": "gpt-5",
-    "framework": "React",
-    "category": "Fundamentals",
-    "value": 0.5,
-    "updatedAt": "2025-10-15T17:52:07.038Z"
+    "category": "Setup",
+    "value": 0.77,
+    "updatedAt": "2026-02-28T12:00:00.000Z"
   }
 ]
 ```
 
 </details>
 
-**Debuging**
+**Debugging**
 
 ```bash
 # Run a single evaluation
-bun run start:eval evals/apiroutes
+bun run start:eval evals/basic-setup
 
 # Run in debug mode
 bun run start --debug
 
-# Run a single evaluation in debug mode
-bun run start:eval evals/apiroutes --debug
+# Run for a specific provider
+bun run start --provider anthropic
 ```
 
 ## Overview
@@ -106,7 +114,7 @@ This project is broken up into a few core pieces:
 
 - [`src/index.ts`](./src/index.ts): This is the main entrypoint of the project. Evaluations, models, reporters, and the runner are registered here, and all executed.
 - [`/evals`](./src/evals): Folders that contain a prompt and grading expectations. Runners currently assume that eval folders contain two files: `graders.ts` and `PROMPT.md`.
-- [`/runners`](./src/runners): The primary logic responsible for loading evaluations, calling provider llms, and outputting scores.
+- [`/runners`](./src/runners): The primary logic responsible for loading evaluations, calling provider LLMs, and outputting scores. Includes `main.ts` (baseline) and `mcp.ts` (with MCP tool support).
 - [`/reporters`](./src/reporters): The primary logic responsible for sending scores somewhere — stdout, a file, etc.
 
 ### Running
@@ -116,14 +124,19 @@ A **runner** takes a simple object as an argument:
 ```jsonc
 {
   "provider": "openai",
-  "model": "gpt-5",
-  "evalPath": "/absolute/path/to/openfort-evals/src/evals/basic-setup
+  "model": "gpt-4.1",
+  "evalPath": "/absolute/path/to/openfort-evals/src/evals/basic-setup"
 }
 ```
 
 It will resolve the provider and model to the respective SDK.
 
 It will load the designated **evaluation**, generate LLM text from the prompt, and pass the result to graders.
+
+When MCP mode is enabled (`--mcp`), the runner additionally:
+- Connects to the Openfort MCP server
+- Provides discovered MCP tools to the model during generation
+- Allows the model to call tools (up to 10 rounds) before final response
 
 ### Evaluations
 
@@ -142,7 +155,7 @@ import { llmChecks } from '@/src/graders/catalog'
 
 export const graders = defineGraders({
   references_providers: contains('providers.tsx'),
-  package_json: llmChecks.packageJsonOpenfortVersion,
+  package_json: llmChecks.packageJsonOpenfortReactVersion,
   openfort_setup: judge(
     'Does the answer correctly set up OpenfortProvider with publishableKey and walletConfig?',
   ),
