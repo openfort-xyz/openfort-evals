@@ -72,22 +72,15 @@ export function resolveModel(provider: Provider, model: string) {
  */
 const MODEL_PRICING: Record<string, [number, number]> = {
   // OpenAI
-  'gpt-4o': [2.5, 10],
-  'gpt-5': [1.25, 10],
-  'gpt-5-chat-latest': [1.25, 10],
   'gpt-5.2': [1.75, 14],
-  'gpt-5.2-codex': [1.75, 14],
+  'gpt-5-nano': [0.05, 0.4],
+  'gpt-5.3-codex': [2, 10],
   // Anthropic
-  'claude-sonnet-4-0': [3, 15],
-  'claude-sonnet-4-5': [3, 15],
-  'claude-opus-4-0': [15, 75],
-  'claude-opus-4-5': [5, 25],
+  'claude-sonnet-4-6': [3, 15],
   'claude-opus-4-6': [5, 25],
-  'claude-haiku-4-5': [1, 5],
   // Google
-  'gemini-2.5-pro': [1.25, 10],
-  'gemini-2.5-flash': [0.15, 0.6],
-  'gemini-2.0-flash': [0.1, 0.4],
+  'gemini-3.1-pro-preview': [2, 12],
+  'gemini-3.1-flash-lite-preview': [0.25, 1.5],
 }
 
 export function estimateCost(

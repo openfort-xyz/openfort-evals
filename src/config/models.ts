@@ -30,23 +30,17 @@ type ProviderModels = {
  */
 export const MODELS: ProviderModels = {
   openai: [
-    { provider: 'openai', name: 'gpt-4o', label: 'GPT-4o' },
-    { provider: 'openai', name: 'gpt-5', label: 'GPT-5' },
-    { provider: 'openai', name: 'gpt-5-chat-latest', label: 'GPT-5 Chat' },
     { provider: 'openai', name: 'gpt-5.2', label: 'GPT-5.2' },
-    { provider: 'openai', name: 'gpt-5.2-codex', label: 'GPT-5.2 Codex' },
+    { provider: 'openai', name: 'gpt-5-nano', label: 'GPT-5 Nano' },
+    { provider: 'openai', name: 'gpt-5.3-codex', label: 'GPT-5.3 Codex' },
   ],
   anthropic: [
-    { provider: 'anthropic', name: 'claude-sonnet-4-0', label: 'Claude Sonnet 4' },
-    { provider: 'anthropic', name: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
-    { provider: 'anthropic', name: 'claude-opus-4-0', label: 'Claude Opus 4' },
-    { provider: 'anthropic', name: 'claude-opus-4-5', label: 'Claude Opus 4.5' },
+    { provider: 'anthropic', name: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
     { provider: 'anthropic', name: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
-    { provider: 'anthropic', name: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
   ],
   google: [
-    { provider: 'google', name: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { provider: 'google', name: 'gemini-3-pro-preview', label: 'Gemini 3 Pro Preview' },
+    { provider: 'google', name: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
+    { provider: 'google', name: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite' },
   ],
 }
 

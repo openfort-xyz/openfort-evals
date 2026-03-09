@@ -1,17 +1,9 @@
-import { ClosedQA, init } from 'autoevals'
-import OpenAI from 'openai'
+import { generateText } from 'ai'
+import { getModel } from '@/src/providers'
 
-// Explicitly initialize openai for autoevals (LLM-as-judge)
-init({
-  // @ts-expect-error
-  client: new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  }),
-})
+const DEFAULT_JUDGE_MODEL = 'gemini-2.5-flash'
 
-const DEFAULT_JUDGE_MODEL = 'gpt-4.1'
-
-/** Configurable via EVAL_JUDGE_MODEL env var or --judge-model CLI flag */
+/** Configurable via EVAL_JUDGE_MODEL env var */
 const judgeModel = process.env.EVAL_JUDGE_MODEL || DEFAULT_JUDGE_MODEL
 
 /** In-memory cache for identical (criteria + response) pairs within a run */
@@ -35,16 +27,27 @@ export const makeScorer = (config: LLMJudgeConfig) => {
     model = judgeModel,
   } = typeof config === 'string' ? { criteria: config } : config
 
-  const scorer = ClosedQA.partial({
-    model,
-  })
   return async (actual: string) => {
     const cacheKey = `${model}::${criteria}::${actual.slice(0, 2000)}`
     const cached = judgeCache.get(cacheKey)
     if (cached !== undefined) return cached
 
-    const score = await scorer({ input, output: actual, criteria })
-    const result = score.score === 1
+    const userPrompt = [
+      input ? `Context: ${input}` : '',
+      `Criteria: ${criteria}`,
+      `Response: ${actual}`,
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+
+    const { text } = await generateText({
+      model: getModel('google', model)!,
+      system:
+        'You are an expert evaluator. Given the criteria below, judge whether the response satisfies it. Reply with ONLY "Y" or "N". Do not include any other text.',
+      prompt: userPrompt,
+    })
+
+    const result = text.trim().toUpperCase().startsWith('Y')
     judgeCache.set(cacheKey, result)
     return result
   }
