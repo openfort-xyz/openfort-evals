@@ -6,6 +6,8 @@ Implement embedded wallet creation and management in a React application using O
 
 Create a React app that:
 
-1. Configures Openfort for wallet creation
-2. Implements wallet creation flow
-3. Displays wallet information (address, balance)
+1. Configures `OpenfortProvider` with `publishableKey` and `walletConfig` (including `shieldPublishableKey`)
+2. Uses the `useWallets` hook from `@openfort/react` to manage wallets
+3. Implements wallet creation using the `createWallet` function from `useWallets`
+4. Displays wallet information (address, active wallet status)
+5. Demonstrates setting the active wallet with `setActiveWallet`

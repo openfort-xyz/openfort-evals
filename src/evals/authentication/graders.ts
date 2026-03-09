@@ -4,10 +4,9 @@ export const graders = defineGraders({
   // Provider setup
   has_openfort_provider: contains('OpenfortProvider'),
   has_publishable_key: contains('publishableKey'),
-  has_shield_key: contains('shieldPublishableKey'),
+  has_wallet_config: contains('walletConfig'),
   has_wagmi_provider: contains('WagmiProvider'),
   has_query_client_provider: contains('QueryClientProvider'),
-  has_ui_config: contains('uiConfig'),
 
   // Authentication hooks
   uses_email_auth: contains('useEmailAuth'),
@@ -19,10 +18,10 @@ export const graders = defineGraders({
   // Hooks methods
   uses_email_methods: containsAny(['signInEmail', 'signUpEmail']),
   uses_oauth_methods: containsAny(['initOAuth']),
-  uses_wallet_oauth_methods: containsAny(['generateSiweMessage', 'signInWithSiwe']),
   uses_guest_methods: containsAny(['signUpGuest']),
 
   // State management hooks
   uses_user_hook: contains('useUser'),
   uses_sign_out_hook: contains('useSignOut'),
+  uses_auth_callback: contains('useAuthCallback'),
 })

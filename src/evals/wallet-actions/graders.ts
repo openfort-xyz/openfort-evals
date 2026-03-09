@@ -1,9 +1,9 @@
 import { contains, containsAny, defineGraders, judge } from '@/src/graders'
 
 export const graders = defineGraders({
-  uses_wallet_client: containsAny(['useWalletClient', 'walletClient', 'wallet client']),
+  uses_sign_message: containsAny(['useSignMessage', 'signMessage']),
   uses_account_hook: contains('useAccount'),
-  demonstrates_signing: containsAny(['signMessage', 'writeContract']),
+  uses_sign_typed_data: containsAny(['useSignTypedData', 'signTypedData']),
   uses_wait_transaction_receipt: contains('useWaitForTransactionReceipt'),
   demonstrates_transactions: containsAny([
     'useWriteContract',
@@ -11,7 +11,6 @@ export const graders = defineGraders({
   ]),
   there_is_an_address: containsAny(['address']),
   handles_transaction_status: containsAny([
-    'isLoading',
     'isPending',
     'isSuccess',
     'isError',

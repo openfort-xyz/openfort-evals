@@ -63,6 +63,7 @@ const failUnder = parseStringArg('fail-under')
 const modelFilter = parseStringArg('model', '-m')
 const providerFilter = parseStringArg('provider', '-p')
 const evalFilter = parseStringArg('eval', '-e')
+const excludeFilter = parseStringArg('exclude', '-x')
 const skillsPath =
   parseStringArg('skills-path') || path.join(process.cwd(), '..', 'skills', 'skills')
 
@@ -109,6 +110,20 @@ const filteredEvaluations = (() => {
   }
 
   return matches
+})()
+
+// Exclude evaluations
+const finalEvaluations = (() => {
+  if (!excludeFilter) return filteredEvaluations
+  const excludeNames = excludeFilter.split(',').map((s) => s.trim().toLowerCase())
+  return filteredEvaluations.filter(
+    (e) =>
+      !excludeNames.some(
+        (name) =>
+          e.path.toLowerCase().endsWith(`/${name}`) ||
+          e.path.toLowerCase().includes(name),
+      ),
+  )
 })()
 
 if (filteredModels.length === 0) {
@@ -169,7 +184,7 @@ if (debugEnabled) {
 
 // Build tasks
 const tasks = filteredModels.flatMap((model) =>
-  filteredEvaluations.map((evaluation) => ({
+  finalEvaluations.map((evaluation) => ({
     provider: model.provider,
     model: model.name,
     label: model.label,
@@ -187,7 +202,7 @@ const modeDisplay = (() => {
   return 'baseline'
 })()
 console.log(
-  `\nMode: ${modeDisplay} | ${tasks.length} tasks (${filteredModels.length} models x ${filteredEvaluations.length} evals)\n`,
+  `\nMode: ${modeDisplay} | ${tasks.length} tasks (${filteredModels.length} models x ${finalEvaluations.length} evals)\n`,
 )
 
 // Dry run: print summary table and exit

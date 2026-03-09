@@ -8,9 +8,10 @@ export const graders = defineGraders({
   uses_openfort_provider: contains('OpenfortProvider'),
   uses_wagmi_provider: containsAny(['WagmiProvider']),
   uses_query_client_provider: containsAny(['QueryClientProvider']),
-  configures_wagmi: containsAny(['getDefaultConfig', 'createClient', 'createConfig']),
+  uses_get_default_config: contains('getDefaultConfig'),
   configures_base_sepolia: containsAny(['baseSepolia']),
   has_publishable_key: containsAny(['publishableKey', 'PUBLISHABLE_KEY']),
+  has_wallet_config: contains('walletConfig'),
   has_shield_key: containsAny(['shieldPublishableKey', 'SHIELD_PUBLISHABLE_KEY']),
   mentions_providers_component: containsAny(['Providers']),
   proper_provider_hierarchy: judge(
