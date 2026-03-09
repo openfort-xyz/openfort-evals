@@ -10,6 +10,7 @@ import type { BraintrustEntry } from '@/src/reporters/braintrust'
 import consoleReporter from '@/src/reporters/console'
 import fileReporter from '@/src/reporters/file'
 import { estimateCost } from '@/src/runners/shared'
+import { rateLimiter } from '@/src/utils/rate-limiter'
 
 // MCP URL — set via MCP_SERVER_URL_OVERRIDE env var (no public default for Openfort)
 const DEFAULT_MCP_URL = process.env.MCP_SERVER_URL_OVERRIDE || ''
@@ -256,7 +257,9 @@ await Promise.all(
     }
 
     try {
-      const result: RunnerResult = await pool.run(runnerArgs)
+      const result: RunnerResult = await rateLimiter.schedule(task.provider, () =>
+        pool.run(runnerArgs),
+      )
 
       if (!result.ok) {
         const errorMsg = result.error instanceof Error

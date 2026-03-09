@@ -69,7 +69,6 @@ export function resolveModel(provider: Provider, model: string) {
  * Sources:
  * - OpenAI: https://platform.openai.com/docs/pricing
  * - Anthropic: https://docs.anthropic.com/en/docs/about-claude/models
- * - Google: https://ai.google.dev/gemini-api/docs/pricing
  */
 const MODEL_PRICING: Record<string, [number, number]> = {
   // OpenAI
@@ -86,8 +85,9 @@ const MODEL_PRICING: Record<string, [number, number]> = {
   'claude-opus-4-6': [5, 25],
   'claude-haiku-4-5': [1, 5],
   // Google
+  'gemini-2.5-pro': [1.25, 10],
   'gemini-2.5-flash': [0.15, 0.6],
-  'gemini-3-pro-preview': [2, 12],
+  'gemini-2.0-flash': [0.1, 0.4],
 }
 
 export function estimateCost(

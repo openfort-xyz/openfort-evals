@@ -19,7 +19,6 @@ export type ModelInfo = {
  * @example
  * MODELS.openai // Array of OpenAI models
  * MODELS.anthropic // Array of Anthropic models
- * MODELS.vercel // Array of Vercel models
  */
 type ProviderModels = {
   [provider in Provider]: ModelInfo[]
@@ -45,15 +44,10 @@ export const MODELS: ProviderModels = {
     { provider: 'anthropic', name: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
     { provider: 'anthropic', name: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
   ],
-  vercel: [
-    { provider: 'vercel', name: 'v0-1.5-md', label: 'v0-1.5-md' },
-    { provider: 'vercel', name: 'v0-1.5-lg', label: 'v0-1.5-lg' },
-  ],
   google: [
     { provider: 'google', name: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
     { provider: 'google', name: 'gemini-3-pro-preview', label: 'Gemini 3 Pro Preview' },
   ],
-  deepseek: [{ provider: 'deepseek', name: 'deepseek-chat', label: 'DeepSeek Chat' }],
 }
 
 /**
